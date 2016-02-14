@@ -1,7 +1,7 @@
 ---
 title: "CourseProject1_RepRes"
-author: "aruigrok"
-date: "20 December 2015"
+author: "Amber Ruigrok"
+date: "14 February 2016"
 output: html_document
 ---
 
@@ -33,6 +33,7 @@ code.
 
 
 #### 1. Prepare Dataset
+##### Code for reading in the dataset and/or processing the data
 
 1.1 Clear workspace
 
@@ -44,7 +45,11 @@ code.
 1.2 Set working directory (change to your own directory)
 
 ```r
-#        setwd("~005. Reproducible Research/Course Project 1/")
+        setwd("~/005. Reproducible Research/Assignments/Course Project 1/")
+```
+
+```
+## Error in setwd("~/005. Reproducible Research/Assignments/Course Project 1/"): cannot change working directory
 ```
 
 1.3 Downloading and saving the data
@@ -60,7 +65,7 @@ code.
 ```
 
 ```
-## [1] "activity.zip is present in folder"
+## [1] "Downloading activity.zip"
 ```
 
 ```r
@@ -72,37 +77,12 @@ code.
         }
 ```
 
-```
-## [1] "activity.csv already exists"
-```
-
 
 1.4 Read in data and transform the date variable into a valid date class to allow
 for easier processing: "date" is in YYYY-MM-DD format
 
 ```r
         require(dplyr)
-```
-
-```
-## Loading required package: dplyr
-## 
-## Attaching package: 'dplyr'
-## 
-## The following object is masked from 'package:nlme':
-## 
-##     collapse
-## 
-## The following objects are masked from 'package:stats':
-## 
-##     filter, lag
-## 
-## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union
-```
-
-```r
         activity <- read.csv("activity.csv", header = TRUE,na.strings = "NA") %>%
                 mutate(date = as.Date(date, "%Y-%m-%d"))
 ```
@@ -179,8 +159,12 @@ dataset.
         require(ggplot2)
         dailysteps <- ggplot(hist_act, aes(x = steps)) + 
                 geom_histogram(binwidth = 800, color="blue", fill="orange") +
-                labs(x = "Total number of steps per day", y = "Count")
+                labs(x = "Total number of steps per day", y = "Count in days")
         dailysteps
+```
+
+```
+## Warning: Removed 8 rows containing non-finite values (stat_bin).
 ```
 
 ![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
@@ -238,7 +222,7 @@ Use ggplot2 to build and format the line graph
 ```r
         require(ggplot2)
         timeplot = ggplot(timeseries, aes(x = interval, y = mean_steps)) + 
-                geom_line(color = "steelblue", size = 1.1) +
+                geom_line(color = "steelblue", size = 0.8) +
                 ggtitle('Average Steps by Time Interval') +
                 labs(x = "Five minute time intervals", y = "Average number of steps")
         timeplot
@@ -283,7 +267,10 @@ The strategy does not need to be sophisticated. For example, you could use the
 mean/median for that day, or the mean for that 5-minute interval, etc.
 
 ```r
-## Create a new dataframe with the median number of steps per interval
+## A new dataframe will be created with the median number of steps per interval 
+## excluding the missing values. This dataframe will subsequently be used to 
+## replace the missing values in the original dataframe with the median number
+## of steps per interval.
         medianact = with(activity, aggregate(steps, by = list(interval),
                 median, na.rm = T))
 ## Rename the variables columns of medianact
@@ -309,7 +296,9 @@ missing data filled in.
 ## Rename the original activity dataframe to activity_complete. This dataframe 
 ## will be used to replace the NAs with within interval median values        
         activity_complete = activity
-## Now for every 
+## Now for every missing value for number of steps, replace value with median
+## number of steps in associated with that interval as calculated in the step
+## above.
 for (i in 1:nrow(activity_complete)) {
       if (is.na(activity_complete$steps[i]) == T) {
             activity_complete$steps[i] = medianact$steps[activity_complete$interval[i] == medianact$interval]
@@ -339,11 +328,11 @@ of steps?
 ```
 
 ```r
-## Create the new histogram and call is dailycomp
+## Create the new histogram and call it dailycomp
         require(ggplot2)
         dailycomp <- ggplot(hist_comp, aes(x = steps)) + 
                 geom_histogram(binwidth = 800, color="orange", fill="blue") +
-                labs(x = "Total number of steps per day", y = "Count")
+                labs(x = "Total number of steps per day", y = "Count in days")
         dailycomp
 ```
 
@@ -393,7 +382,8 @@ the original mean and median.
 For this part the weekdays() function may be of some help here. Use the dataset
 with the filled-in missing values for this part.
 
-5.1 Create a new factor variable in the dataset with two levels – “weekday” and
+5.1 First we need to divide the dataset into a weekday set and a weekend set.
+Create a new factor variable in the dataset with two levels – “weekday” and
 “weekend” indicating whether a given date is a weekday or weekend day.
 
 ```r
